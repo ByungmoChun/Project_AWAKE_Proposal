@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project AWAKE(각성) — 치지직 요구안 시뮬레이션 &amp; 대응 매핑 v0.1</title>
+<style>
+:root{
+  --bg:#0c0e14; --panel:#12151e; --panel2:#171b27; --line:#242a3a;
+  --txt:#e9ebf2; --sub:#9aa1b4; --dim:#6b7280;
+  --vio:#a99bff; --vio-deep:#7c6cf0; --gold:#e8c476; --green:#8fd8a8; --red:#e88a8a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:"Pretendard Variable",Pretendard,-apple-system,sans-serif;line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased;}
+.mono{font-family:"IBM Plex Mono",monospace;}
+.wrap{max-width:960px;margin:0 auto;padding:0 32px 120px;}
+
+header{padding:72px 0 0;}
+.doc-meta{display:flex;justify-content:space-between;align-items:baseline;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:56px;}
+.doc-meta .tag{color:var(--vio);}
+
+.hero .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.2em;color:var(--vio);margin-bottom:20px;}
+.hero h1{font-size:clamp(27px,4vw,38px);font-weight:800;letter-spacing:-.02em;line-height:1.34;margin-bottom:20px;}
+.hero h1 .dim{color:var(--sub);font-weight:600;}
+.hero .thesis{color:var(--sub);font-size:15.5px;max-width:800px;margin-bottom:36px;}
+.hero .thesis strong{color:var(--txt);}
+
+/* ── platform split diagram (signature) ── */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px;}
+.plat{border-radius:14px;padding:26px 26px 22px;border:1px solid var(--line);background:var(--panel);position:relative;}
+.plat.master{border-color:rgba(169,155,255,.45);background:linear-gradient(180deg,rgba(124,108,240,.10),var(--panel) 55%);}
+.plat.touch{border-color:rgba(232,196,118,.45);background:linear-gradient(180deg,rgba(232,196,118,.08),var(--panel) 55%);}
+.plat.touch .p-role{color:var(--gold);}
+.plat .p-role{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--dim);}
+.plat.master .p-role{color:var(--vio);}
+.plat h3{font-size:21px;font-weight:800;letter-spacing:-.01em;margin:6px 0 4px;}
+.plat .p-sub{font-size:13px;color:var(--sub);margin-bottom:18px;}
+.chipset{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{font-size:12.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);}
+.chip.core{border-color:rgba(169,155,255,.5);color:var(--vio);}
+.chip.later{border-style:dashed;color:var(--dim);}
+.bridge{grid-column:1/3;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;color:var(--dim);padding:4px 0 0;}
+.bridge b{color:var(--gold);font-weight:600;}
+.hero-note{font-size:12.5px;color:var(--dim);margin-top:12px;}
+
+section{margin-top:88px;}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;}
+.sec-head .no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--vio);letter-spacing:.15em;}
+.sec-head h2{font-size:23px;font-weight:800;letter-spacing:-.015em;}
+.sec-lede{color:var(--sub);margin-bottom:30px;max-width:800px;}
+.sec-lede strong{color:var(--txt);}
+
+/* ── benchmark table ── */
+.bench{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.bench-row{display:grid;grid-template-columns:210px 90px 1fr;border-bottom:1px solid var(--line);background:var(--panel);}
+.bench-row:last-child{border-bottom:none;}
+.bench-row.head{background:var(--panel2);}
+.bench-row .cell{padding:15px 18px;font-size:13.5px;}
+.bench-row.head .cell{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--dim);padding:11px 18px;}
+.bench-row .f{font-weight:700;border-right:1px solid var(--line);}
+.bench-row .f .fs{display:block;font-size:11.5px;color:var(--dim);font-weight:400;margin-top:2px;}
+.bench-row .v{border-right:1px solid var(--line);display:flex;align-items:center;}
+.bench-row .d{color:var(--sub);}
+.bench-row .d strong{color:var(--txt);}
+.badge{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.06em;padding:3px 9px;border-radius:99px;white-space:nowrap;}
+.badge.adopt{color:var(--green);border:1px solid rgba(143,216,168,.4);}
+.badge.remix{color:var(--gold);border:1px solid rgba(232,196,118,.45);}
+.badge.skip{color:var(--dim);border:1px solid var(--line);}
+
+.diffbox{border:1px solid rgba(169,155,255,.3);background:rgba(169,155,255,.05);border-radius:14px;padding:26px 30px;margin-top:22px;}
+.diffbox .mono-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.15em;color:var(--vio);display:block;margin-bottom:10px;}
+.diffbox p{color:var(--sub);font-size:14.5px;}
+.diffbox p strong{color:var(--txt);}
+
+/* ── rationale cards ── */
+.why{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
+.why .w{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 20px;}
+.why .w .wk{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--vio);margin-bottom:8px;}
+.why .w h4{font-size:14.5px;font-weight:800;margin-bottom:6px;}
+.why .w p{font-size:12.5px;color:var(--sub);line-height:1.65;}
+
+/* ── feature matrix ── */
+.matrix{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.mx-row{display:grid;grid-template-columns:1fr 120px 120px 1fr;border-bottom:1px solid var(--line);background:var(--panel);}
+.mx-row:last-child{border-bottom:none;}
+.mx-row.head{background:var(--panel2);}
+.mx-row .cell{padding:13px 16px;font-size:13px;border-right:1px solid var(--line);}
+.mx-row .cell:last-child{border-right:none;}
+.mx-row.head .cell{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--dim);padding:10px 16px;}
+.mx-row .fn{font-weight:700;}
+.mx-row .pv{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:11px;}
+.pv .on{color:var(--vio);font-weight:700;}
+.pv .semi{color:var(--gold);}
+.pv .off{color:#3d4354;}
+.mx-row .nt{color:var(--sub);font-size:12.5px;}
+
+/* ── user types ── */
+.users{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.users .u{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px;}
+.users .u .uk{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--vio);margin-bottom:8px;}
+.users .u h4{font-size:16px;font-weight:800;margin-bottom:8px;}
+.users .u p{font-size:13px;color:var(--sub);}
+.users .u p strong{color:var(--txt);}
+.flow-note{margin-top:16px;padding:14px 18px;border-radius:10px;background:rgba(143,216,168,.06);border:1px solid rgba(143,216,168,.22);font-size:13.5px;color:var(--txt);}
+.flow-note .mono-label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--green);display:block;margin-bottom:4px;}
+
+/* ── IA tree ── */
+.ia{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.ia .tree{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px 26px;}
+.ia .tree h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--vio);margin-bottom:14px;}
+.ia ul{list-style:none;}
+.ia li{font-size:13.5px;padding:5px 0;color:var(--txt);border-bottom:1px dashed rgba(36,42,58,.7);}
+.ia li:last-child{border-bottom:none;}
+.ia li .sub-i{color:var(--dim);font-size:12px;display:block;padding-left:14px;}
+.ia li em{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--dim);letter-spacing:.06em;margin-left:8px;}
+
+/* ── modules ── */
+.mod{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px 28px;margin-bottom:13px;display:grid;grid-template-columns:64px 1fr;gap:18px;}
+.mod .mno{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;color:var(--vio-deep);padding-top:2px;}
+.mod h3{font-size:16px;font-weight:800;margin-bottom:6px;letter-spacing:-.01em;}
+.mod h3 .dep{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--gold);border:1px solid rgba(232,196,118,.4);border-radius:99px;padding:2px 8px;margin-left:9px;vertical-align:2px;letter-spacing:.05em;font-weight:500;}
+.mod p{color:var(--sub);font-size:13.5px;}
+.mod p strong{color:var(--txt);}
+
+/* ── roadmap ── */
+.phase{display:grid;grid-template-columns:120px 1fr;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:12px;}
+.phase .pk{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--vio);font-weight:600;line-height:1.5;}
+.phase .pk .pd{display:block;font-size:9.5px;color:var(--dim);font-weight:400;margin-top:3px;letter-spacing:.05em;}
+.phase h4{font-size:15px;font-weight:800;margin-bottom:5px;}
+.phase p{font-size:13px;color:var(--sub);}
+.phase p strong{color:var(--txt);}
+.phase.hot{border-color:rgba(232,196,118,.4);}
+
+/* ── risks ── */
+.risk{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.risk-row{display:grid;grid-template-columns:240px 1fr;border-bottom:1px solid var(--line);background:var(--panel);}
+.risk-row:last-child{border-bottom:none;}
+.risk-row .cell{padding:16px 20px;font-size:13.5px;}
+.risk-row .rn{font-weight:700;border-right:1px solid var(--line);}
+.risk-row .rd{color:var(--sub);}
+.risk-row .rd strong{color:var(--txt);}
+
+/* ── act structure (2막) ── */
+.acts{display:grid;grid-template-columns:1fr 230px 1fr;gap:14px;margin-bottom:26px;align-items:stretch;}
+.act{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;}
+.act.a1{border-color:rgba(169,155,255,.45);background:linear-gradient(180deg,rgba(124,108,240,.08),var(--panel) 60%);}
+.act.a2{border-color:rgba(232,196,118,.4);background:linear-gradient(180deg,rgba(232,196,118,.07),var(--panel) 60%);}
+.act .ak{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;margin-bottom:8px;}
+.act.a1 .ak{color:var(--vio);} .act.a2 .ak{color:var(--gold);}
+.act h3{font-size:18px;font-weight:800;margin-bottom:6px;letter-spacing:-.01em;}
+.act .asub{font-size:12.5px;color:var(--sub);margin-bottom:14px;}
+.act ul{list-style:none;}
+.act li{font-size:13px;color:var(--txt);padding:4px 0;border-bottom:1px dashed rgba(36,42,58,.7);}
+.act li:last-child{border-bottom:none;}
+.act li b{color:var(--vio);} .act.a2 li b{color:var(--gold);}
+.gate{background:var(--panel2);border:1px dashed var(--dim);border-radius:14px;padding:22px 18px;display:flex;flex-direction:column;justify-content:center;text-align:center;}
+.gate .gk{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.18em;color:var(--dim);margin-bottom:8px;}
+.gate h4{font-size:14.5px;font-weight:800;margin-bottom:6px;}
+.gate p{font-size:11.5px;color:var(--sub);line-height:1.6;}
+.gate .warn{margin-top:10px;font-size:10.5px;color:var(--gold);font-family:"IBM Plex Mono",monospace;letter-spacing:.04em;}
+/* ── duo comparison table ── */
+.duo{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:8px;}
+.duo-row{display:grid;grid-template-columns:170px 1fr 1fr;border-bottom:1px solid var(--line);background:var(--panel);}
+.duo-row:last-child{border-bottom:none;}
+.duo-row.head{background:var(--panel2);}
+.duo-row .cell{padding:14px 18px;font-size:13px;border-right:1px solid var(--line);color:var(--sub);}
+.duo-row .cell:last-child{border-right:none;}
+.duo-row .cell strong{color:var(--txt);}
+.duo-row .lbl{font-weight:700;color:var(--txt);font-size:12.5px;}
+.duo-row.head .cell{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;padding:11px 18px;}
+.duo-row.head .c1{color:var(--vio);} .duo-row.head .c2{color:var(--gold);}
+/* ── dual stat diagram ── */
+.statpair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px;}
+.statcol{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px 26px;}
+.statcol.s1{border-color:rgba(169,155,255,.4);} .statcol.s2{border-color:rgba(232,196,118,.4);}
+.statcol .sk{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;margin-bottom:6px;}
+.statcol.s1 .sk{color:var(--vio);} .statcol.s2 .sk{color:var(--gold);}
+.statcol h4{font-size:16px;font-weight:800;margin-bottom:3px;}
+.statcol .ssub{font-size:12px;color:var(--sub);margin-bottom:14px;}
+.srow{display:grid;grid-template-columns:86px 1fr;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(36,42,58,.7);font-size:12.5px;}
+.srow:last-child{border-bottom:none;}
+.srow .sn{font-weight:700;color:var(--txt);}
+.srow .sd{color:var(--dim);font-size:11.5px;line-height:1.55;}
+.stat-note{font-size:12.5px;color:var(--dim);margin-top:12px;}
+
+/* ── concept art figures ── */
+.figwrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:20px 0 8px;}
+.figwrap img{display:block;width:100%;}
+.fig3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 8px;}
+.fig3 .fcell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);}
+.fig3 img{display:block;width:100%;}
+.fig3 .fl{padding:10px 14px;font-size:11.5px;color:var(--sub);line-height:1.6;border-top:1px solid var(--line);}
+.fig3 .fl b{color:var(--gold);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;display:block;margin-bottom:3px;}
+@media (max-width:760px){.fig3{grid-template-columns:1fr;}}
+
+/* ── cover (title page) ── */
+.cover{min-height:94vh;display:flex;flex-direction:column;justify-content:center;padding:60px 0 40px;border-bottom:1px solid var(--line);margin-bottom:20px;}
+.cover .c-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.22em;color:var(--dim);margin-bottom:46px;}
+.cover .c-orb{width:64px;height:64px;border-radius:50%;margin-bottom:34px;background:radial-gradient(circle at 35% 30%, #cfc5ff, var(--vio-deep));box-shadow:0 0 22px rgba(169,155,255,.55), 0 0 0 4px rgba(232,196,118,.5);}
+.cover h1{font-size:clamp(38px,6vw,62px);font-weight:800;letter-spacing:-.025em;line-height:1.12;margin-bottom:14px;}
+.cover h1 .kr{color:var(--gold);font-weight:700;}
+.cover .c-sub{font-size:clamp(16px,2.2vw,21px);font-weight:600;color:var(--sub);letter-spacing:.01em;margin-bottom:14px;}
+.cover .c-sub b{color:var(--txt);}
+.cover .c-badge{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.15em;color:var(--red);border:1px solid rgba(240,138,138,.45);border-radius:99px;padding:4px 14px;margin-bottom:52px;width:fit-content;}
+.cover .c-why{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:880px;}
+.cover .why-box{border-top:1px solid var(--line);padding-top:16px;}
+.cover .why-box .wl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;color:var(--vio);margin-bottom:9px;}
+.cover .why-box.gold .wl{color:var(--gold);}
+.cover .why-box p{font-size:12px;color:var(--dim);line-height:1.8;}
+.cover .why-box p strong{color:var(--sub);font-weight:700;}
+.cover .c-foot{margin-top:56px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--dim);}
+@media (max-width:760px){.cover .c-why{grid-template-columns:1fr;}}
+
+/* ── ecosystem map table ── */
+.map{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:8px;}
+.map-row{display:grid;grid-template-columns:190px 150px 160px 1fr;border-bottom:1px solid var(--line);background:var(--panel);}
+.map-row:last-child{border-bottom:none;}
+.map-row.head{background:var(--panel2);}
+.map-row .cell{padding:12px 15px;font-size:12.8px;border-right:1px solid var(--line);color:var(--sub);}
+.map-row .cell:last-child{border-right:none;}
+.map-row.head .cell{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--dim);padding:10px 15px;}
+.map-row .b1{font-weight:700;color:var(--txt);}
+.map-row .cell strong{color:var(--txt);}
+.map-row .app{color:var(--vio);font-weight:700;}
+/* ── insight cards ── */
+.insight{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px;}
+.insight .w{background:var(--panel);border:1px solid rgba(143,216,168,.3);border-radius:12px;padding:20px;}
+.insight .w .wk{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--green);margin-bottom:8px;}
+.insight .w h4{font-size:14px;font-weight:800;margin-bottom:6px;color:var(--txt);}
+.insight .w p{font-size:12.3px;color:var(--sub);line-height:1.65;}
+.insight .w p strong{color:var(--txt);}
+@media (max-width:760px){.map-row{grid-template-columns:1fr 1fr;} .insight{grid-template-columns:1fr;}}
+
+/* ── genesis (단계적 탄생) ── */
+.genesis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0 10px;}
+.gstate{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 13px 16px;text-align:center;}
+.gstate.final{border-color:rgba(232,196,118,.55);background:linear-gradient(180deg,rgba(232,196,118,.09),var(--panel) 60%);}
+.orb{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;}
+.orb.o0{border:2px dashed #4a5063;background:repeating-linear-gradient(45deg,transparent 0 4px,rgba(107,114,128,.15) 4px 6px);}
+.orb.o1{border:1px solid var(--line);background:conic-gradient(var(--vio-deep) 0 25%, #1b2030 25% 100%);}
+.orb.o2{border:1px solid var(--line);background:conic-gradient(var(--vio-deep) 0 55%, #1b2030 55% 100%);}
+.orb.o3{border:1px solid rgba(169,155,255,.5);background:conic-gradient(var(--vio-deep) 0 90%, #1b2030 90% 100%);}
+.orb.o4{background:radial-gradient(circle at 35% 30%, #cfc5ff, var(--vio-deep));box-shadow:0 0 16px rgba(169,155,255,.55), 0 0 0 3px rgba(232,196,118,.55);}
+.gstate .gk2{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.14em;color:var(--dim);margin-bottom:4px;}
+.gstate.final .gk2{color:var(--gold);}
+.gstate h5{font-size:12.5px;font-weight:800;margin-bottom:5px;color:var(--txt);}
+.gstate p{font-size:10.8px;color:var(--dim);line-height:1.55;}
+/* ── FOR/AS ── */
+.foras{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 6px;}
+.fa{border-radius:12px;padding:20px 22px;border:1px solid;}
+.fa.ok{border-color:rgba(143,216,168,.35);background:rgba(143,216,168,.05);}
+.fa.no{border-color:rgba(240,138,138,.38);background:rgba(240,138,138,.05);}
+.fa .fk{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.15em;display:block;margin-bottom:7px;}
+.fa.ok .fk{color:var(--green);} .fa.no .fk{color:var(--red);}
+.fa h5{font-size:14.5px;font-weight:800;margin-bottom:7px;}
+.fa p{font-size:12.8px;color:var(--sub);line-height:1.65;}
+.fa p strong{color:var(--txt);}
+/* ── forbid (방송 문법) ── */
+.forbid{border:1px solid rgba(240,138,138,.32);border-radius:12px;background:rgba(240,138,138,.04);padding:24px 28px;margin-top:16px;}
+.forbid .mono-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.15em;color:var(--red);display:block;margin-bottom:10px;}
+.forbid p{font-size:13.5px;color:var(--sub);padding:6px 0;border-bottom:1px dashed rgba(240,138,138,.15);}
+.forbid p:last-of-type{border-bottom:none;}
+.forbid p strong{color:var(--txt);}
+.forbid .clause{margin-top:12px;padding:11px 14px;border-radius:8px;background:rgba(240,138,138,.08);font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--txt);letter-spacing:.02em;}
+
+footer{margin-top:100px;border-top:1px solid var(--line);padding-top:20px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--dim);letter-spacing:.08em;line-height:2;}
+
+@media (max-width:760px){
+  .wrap{padding:0 20px 80px;}
+  .split{grid-template-columns:1fr;}
+  .bridge{grid-column:1;}
+  .why,.users,.ia{grid-template-columns:1fr;}
+  .bench-row{grid-template-columns:1fr;}
+  .bench-row .f,.bench-row .v{border-right:none;border-bottom:1px dashed var(--line);}
+  .mx-row{grid-template-columns:1fr 60px 60px;}
+  .mx-row .nt{display:none;}
+  .mod,.phase{grid-template-columns:1fr;gap:6px;}
+  .risk-row{grid-template-columns:1fr;}
+  .risk-row .rn{border-right:none;border-bottom:1px solid var(--line);}
+}
+</style>
+<style>
+.mini-cover{padding:70px 0 46px;border-bottom:1px solid var(--line);margin-bottom:34px;}
+.mini-cover .c-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.22em;color:var(--dim);margin-bottom:26px;}
+.mini-cover h1{font-size:clamp(28px,4.2vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.18;margin-bottom:10px;}
+.mini-cover h1 .kr{color:var(--gold);font-weight:700;}
+.mini-cover .c-sub{font-size:16px;font-weight:600;color:var(--sub);margin-bottom:16px;}
+.mini-cover .c-note{font-size:12px;color:var(--dim);line-height:1.75;max-width:780px;}
+.mini-cover .c-note strong{color:var(--sub);}
+.mini-foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--dim);}
+.cmp{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:12.5px;line-height:1.7;}
+.cmp th,.cmp td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left;}
+.cmp th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;color:var(--dim);background:rgba(255,255,255,.02);font-weight:600;}
+.cmp td.opt{white-space:nowrap;font-weight:700;color:var(--txt);}
+.cmp tr.pick td{background:rgba(122,255,178,.045);}
+.cmp tr.pick td.opt{color:#7dd8a0;}
+.cmp tr.kill td{opacity:.62;}
+.badge{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;padding:3px 10px;border-radius:3px;margin-left:8px;vertical-align:2px;}
+.badge.dec{color:#7dd8a0;border:1px solid rgba(125,216,160,.45);background:rgba(125,216,160,.07);}
+.badge.rec{color:var(--gold);border:1px solid rgba(232,196,118,.45);background:rgba(232,196,118,.07);}
+.decision{border:1px solid rgba(125,216,160,.4);background:rgba(125,216,160,.05);border-radius:8px;padding:16px 18px;margin:16px 0 6px;font-size:13px;line-height:1.85;}
+.decision .dk{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;color:#7dd8a0;margin-bottom:8px;}
+.decision.amber{border-color:rgba(232,196,118,.4);background:rgba(232,196,118,.05);}
+.decision.amber .dk{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="mini-cover">
+  <div class="c-eyebrow">SUPERSTORY INTERNAL — NEGOTIATION PREP / RED TEAM SIMULATION</div>
+  <h1>치지직 요구안 시뮬레이션 <span class="kr">— &amp; 대응 매핑</span></h1>
+  <div class="c-sub">Project AWAKE(각성) · 파트너십 협상 준비 문서 v0.1</div>
+  <div class="c-note">치지직 사업 담당자의 관점에서 "30억을 태우는 대가로 내부 품의에 올릴 요구안"을 먼저 작성하고,
+  각 조항에 대한 우리의 대응 스탠스(수용 / 조건부 / 방어선)를 매핑한다.
+  목적: 우리 제안서가 일방적 '설득'이 아니라 상대 요구에 대한 '응답'이 되도록 —
+  <strong>상대가 원하는 것을 우리가 먼저 써봐야, 모두가 원하는 제안이 나온다.</strong>
+  <span style="color:var(--gold)">본 문서는 순수 내부용 — 어떤 형태로도 외부 공유 금지.</span></div>
+</div>
+
+<section>
+  <div class="sec-head"><span class="no">01</span><h2>치지직의 계산 — 그들이 사는 것, 그들이 두려워하는 것</h2></div>
+  <table class="cmp">
+    <tr><th style="width:120px;">구분</th><th>내용</th></tr>
+    <tr><td class="opt">사는 것</td>
+      <td>① <b>이적 불가능한 스타의 공급 파이프라인</b>(캐릭터 IP 결속 구조 — 플랫폼 최초의 '떠날 수 없는 탤런트' 클래스)
+      ② 국내외 버튜버 전용 스튜디오(기투자 캐펙스)의 가동률·기술 시연 ③ 시즌당 버튜버 버티컬 한 층(데뷔 5 + 비데뷔 19 + 탈락자 트랙)
+      ④ 검증·팬덤 검증 완료 상태로 인도되는 탤런트(획득 리스크의 외주화) ⑤ 도네이션을 넘는 팬덤형 과금 레일 실증(젬·스탯·NFT).</td></tr>
+    <tr><td class="opt">두려워하는 것</td>
+      <td>① 30억을 태우고 <b>방송 한 편만 남는 것</b>(시즌 후 자산 귀속 불명) ② <b>제3자 앱 리스크</b> — 네이버는 시스템상 외부 서드파티와 일하지 않음(7/6 확인),
+      예외를 뚫으려면 임원 보고용 명분 필요 ③ <b>투표 조작 시비</b>가 네이버 브랜드에 튀는 것(프로듀스 트라우마)
+      ④ 데뷔 시점(노출 최대치)에 리스크를 인수하는 구조 ⑤ IP는 남의 것인데 비용은 자기가 다 내는 그림 —
+      "잘되면 슈퍼스토리 IP 가치가 오르고, 못되면 우리 손실" ⑥ 편성·운영 통제권 없이 자기 플랫폼 간판을 거는 것.</td></tr>
+    <tr><td class="opt">내부 사정</td>
+      <td>정해진 버짓 없음 — 경영 보고부터 새로 받는 구조(7/6). 즉 담당자는 <b>"임원을 설득할 수 있는 요구안"</b>이 필요하다:
+      금액이 클수록 리턴 조항이 촘촘해야 품의가 통과된다. 우리 제안서는 사실상 <b>그의 품의서 초안</b>이 되어줘야 한다.</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="no">02</span><h2>치지직 요구안 (시뮬레이션 텀시트)</h2></div>
+  <p class="sec-lede">아래는 치지직 담당자가 30억 규모 품의에 붙일 법한 요구 조항을 6개 카테고리로 재구성한 것이다.
+  ★ = 그쪽에서 절대 물러서기 어려운 조항(임원 보고 통과 조건)으로 추정.</p>
+  <table class="cmp">
+    <tr><th style="width:150px;">카테고리</th><th>요구 조항</th></tr>
+    <tr><td class="opt">A. 투자 회수</td>
+      <td><b>A1 ★ 우선 회수(recoupment)</b> — 시즌 관련 수익(젬 RS·음원·굿즈)에서 제작비 회수 전까지 치지직 우선 배분.
+      <b>A2</b> 앱 내 결제 수익 셰어 — "트래픽은 우리가 보낸다": 방송 연동 기간 젬 매출의 일정 지분.
+      <b>A3</b> 마일스톤 분할 지급(기획 확정 / 앱 출시 / 시즌 개시 / 데뷔) + 핵심 지표 미달 시 후속 지급 조정.
+      <b>A4</b> 데뷔조 2차 사업(음원·굿즈·광고) 수익 지분.</td></tr>
+    <tr><td class="opt">B. 독점권</td>
+      <td><b>B1 ★ AWAKE 세계관 라이브 방송 치지직 독점</b>(계약 기간, 비데뷔 19인 포함).
+      <b>B2 ★ 데뷔조 5인 장기 전속</b>(방송 + 매니지먼트, 최소 N년).
+      <b>B3 경업 금지</b> — 슈퍼스토리·LVNEXUS는 동일 포맷을 계약 기간 내 타 플랫폼(SOOP·유튜브 라이브 등)과 진행 불가.
+      <b>B4</b> 차기 시즌 + 글로벌 시즌(해외 스튜디오 활용) 우선협상권.</td></tr>
+    <tr><td class="opt">C. IP 안전장치</td>
+      <td><b>C1</b> 데뷔조 캐릭터 IP <b>양도 또는 공동 소유</b>(1차 요구 — "비용을 전부 대는데 자산이 남의 것일 수는 없다").
+      <b>C2 ★ 하자담보</b> — 인계 후 X개월 내 G2 이전 사유 발각 시 슈퍼스토리 책임(배상 또는 대체).
+      <b>C3</b> 소울 귀책 졸업 시 보전 — 라이선스료 감액 또는 대체 캐릭터.
+      <b>C4</b> 헌법 준수 조항의 상호성 — 슈퍼스토리 귀책(IP 분쟁·디자인 표절 시비 등) 시 동등한 배상 구조.</td></tr>
+    <tr><td class="opt">D. 리스크·브랜드</td>
+      <td><b>D1 ★ 투표 무결성 감사권</b> — 제3자 감사 또는 치지직 감사권 + 원장 접근(프로듀스 사태가 네이버 브랜드에 튀는 것 원천 차단).
+      <b>D2 ★ 위기 통보·협의권</b> — 실격·폭로 등 중대 사안의 치지직 지정 창구 즉시 통보 + 공동 대응.
+      <b>D3</b> 검증 품질 진술보증(rep &amp; warranty) — "검증했다"의 계약적 보증.
+      <b>D4</b> 네이버 플랫폼 정책·미성년 보호 정책 준수 증빙(청소년보호책임자·시간 원장 등).
+      <b>D5</b> 앱 장애 SLA — 생방 중 투표 앱 다운 = 방송 사고: 가동률 보증 + 페널티.</td></tr>
+    <tr><td class="opt">E. 운영 통제</td>
+      <td><b>E1 ★ 편성 최종 결정권</b> — 자기 스튜디오·트래픽 최적화 기준.
+      <b>E2</b> 공동 운영위원회(주요 의사결정 협의체) + 제작 크레딧 "치지직 스튜디오 제작" 브랜딩.
+      <b>E3</b> 시청·투표 데이터 공유(네이버는 데이터 회사다).
+      <b>E4</b> 기존 치지직 스트리머·버튜버의 참여 통로(7/6 리더 요구 — 생태계 부스팅 명분).</td></tr>
+    <tr><td class="opt">F. 명분(대내)</td>
+      <td><b>F1</b> 제3자 앱 예외 승인을 위한 명분 패키지 — "제작비 절감 + 콘텐츠 영역을 앱이 채운다"(7/6 긍정 반응)의 문서화.
+      <b>F2</b> "30억 → 받는 것" 1페이지 계산표(임원 보고용) — 우리가 만들어서 줘야 하는 것.</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="no">03</span><h2>대응 매핑 — 수용 / 조건부 / 방어선</h2></div>
+  <table class="cmp">
+    <tr><th style="width:110px;">조항</th><th style="width:110px;">스탠스</th><th>대응</th></tr>
+    <tr class="pick"><td class="opt">B1 라이브 독점</td><td class="opt">즉시 수용</td><td>어차피 치지직에서 한다 — 비용 제로, 상대 체감 가치 최대. <b>선제 제안 카드 1순위</b>("플랫폼 영구 홈 조항").</td></tr>
+    <tr class="pick"><td class="opt">D1 무결성 감사</td><td class="opt">즉시 수용</td><td>미결 ⑩에서 이미 "원장 공개 = 신뢰 메시지"로 설계됨. 제3자 감사 수용이 오히려 우리 셀링 포인트.</td></tr>
+    <tr class="pick"><td class="opt">D2 위기 통보</td><td class="opt">즉시 수용</td><td>레드팀 지적(P1-③)과 동일 — 통합본 §13에 파트너 에스컬레이션 조항으로 반영 예정.</td></tr>
+    <tr class="pick"><td class="opt">D4 정책 준수 · E4 스트리머 참여 · F 명분 패키지</td><td class="opt">즉시 수용</td><td>D4는 통합본 §11이 이미 답. E4는 "전생 공개 자유 + 별도 무대"로 설계 완료. F2 계산표는 우리가 먼저 만들어 간다 — <b>상대의 품의서를 우리가 써주는 것이 최고의 협상</b>.</td></tr>
+    <tr><td class="opt">A1 우선 회수</td><td class="opt">조건부</td><td>수용하되 범위 한정: 시즌 직접 수익 내 회수(캡 설정), 앱 인프라 투자분은 제외. 회수 후 배분율은 별도 협상.</td></tr>
+    <tr><td class="opt">A2 젬 셰어</td><td class="opt">조건부</td><td>방송 연동 구간(라이브 중 투표 등 트래픽 기여 명확 구간)의 매출 셰어는 수용 — 단 앱 전체 매출 셰어는 불가(7/6 지분 방어선: 결제·아이템·채팅 RS는 우리 심장).</td></tr>
+    <tr><td class="opt">B2 데뷔조 전속</td><td class="opt">조건부</td><td>장기 <b>독점 라이선스</b>로 수용(경제 효과는 보유와 동등) — 소유 아닌 대여. 티어형 전속(참가규정 §03)과 정합.</td></tr>
+    <tr><td class="opt">B3 경업 금지</td><td class="opt">조건부</td><td>동일 포맷·계약 기간·한국 시장 한정으로 수용. 글로벌은 B4 우선협상권과 교환 — 영구·전 영역 경업 금지는 불가.</td></tr>
+    <tr><td class="opt">C2 하자담보</td><td class="opt">조건부</td><td>수용하되 범위 한정: <b>G2 검증 범위 내 + 공적 기록 기준(§09 기준표) + 기간 캡(예: 인계 후 6개월)</b>. 검증 불가능 영역(사적 폭로류)은 면책 — 검증 프로토콜 문서가 그 경계의 증빙.</td></tr>
+    <tr><td class="opt">C3 귀책 보전 · C4 상호성</td><td class="opt">조건부</td><td>C3 = 대체 캐릭터 라이선스로 수용(재캐스팅 금지와 양립하는 유일한 보전). C4 상호성은 공정하므로 수용 — 우리 귀책 정의를 명확히.</td></tr>
+    <tr><td class="opt">D5 SLA · E3 데이터</td><td class="opt">조건부</td><td>SLA는 수용(수준·페널티 협상, M4 무결성 설계가 뒷받침). 데이터는 <b>집계·비식별 데이터 공유는 수용, 유저 원천 데이터는 불가</b>(개인정보 + 앱 자산).</td></tr>
+    <tr><td class="opt">E1 편성권</td><td class="opt">조건부</td><td>편성 결정권은 존중하되 <b>세계관 제작 요구사항을 편성 전제 조건으로 계약에 명시</b>: 검증 최소 기간(결선 X주·확정~각성 Y일), 미성년 22시 컷, 각성 모먼트 배치 협의권(미결 ⑪ 연동). "당신이 시간표를 짜되, 이 제약은 물리 법칙이다."</td></tr>
+    <tr class="kill"><td class="opt">C1 IP 양도</td><td class="opt" style="color:#e08a8a;">방어선</td><td><b>원본 양도·공동 소유 불가.</b> 대체 패키지로 응답: B1 영구 홈 + B2 장기 독점 라이선스 + A4 2차 사업 지분 + C3 보전 — "소유가 주는 경제 효과 전부를 소유 없이 드린다."
+      헌법 준수를 라이선스 존속 조건으로 명시(위반 시 회수권 = 우리의 무기). 최후 카드(먼저 꺼내지 않음): 데뷔조 한정 공동 지분 — 헌법 준수를 지분 조건으로.</td></tr>
+    <tr class="kill"><td class="opt">비데뷔 19인 · 차기 IP</td><td class="opt" style="color:#e08a8a;">방어선</td><td>파이프라인의 소유 — 협상 대상 아님. 19인의 라이브 독점(B1)으로 치지직 이익은 충족된다.</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="no">04</span><h2>협상 설계 — 기브 &amp; 테이크 요약</h2></div>
+  <table class="cmp">
+    <tr><th style="width:200px;">먼저 주는 것 (선제 제안)</th><th style="width:200px;">받는 것</th><th>지키는 것</th></tr>
+    <tr><td>라이브 영구 홈(B1) · 무결성 감사권(D1) · 위기 통보(D2) · 명분 패키지(F) · 데뷔조 장기 독점 라이선스(B2)</td>
+    <td>30억 제작·기술비 · 스튜디오 · 트래픽·프로모션 · 제3자 앱 예외 승인 · 글로벌 시즌 파트너십</td>
+    <td>캐릭터 원본 IP · 헌법 해석권 · 앱(결제·아이템·채팅 RS) · 비데뷔 19인 · 차기 시즌</td></tr>
+  </table>
+  <div class="decision" style="margin-top:14px;">
+    <div class="dk">제안서 반영 원칙</div>
+    ① 우리 제안서의 목차를 이 요구안에 <b>1:1로 응답하는 구조</b>로 짠다 — 상대 담당자가 그대로 품의에 붙일 수 있게.
+    ② "30억 → 받는 것" 1페이지 계산표(F2)를 우리가 만들어 간다.
+    ③ IP 논의는 우리가 먼저 꺼낸다 — "양도는 없지만, 소유의 경제 효과는 전부 드린다"를 선제 프레임으로(상대가 C1을 꺼낸 후 방어하면 늦다).
+    ④ 통합본(설계헌법·참가규정 v0.2)의 검증·보호 프로토콜은 협상 자료로 요약 발췌해 제시 — <b>"우리는 리스크에 돈을 쓰는 파트너"</b>가 D 카테고리 전체의 답이다.
+  </div>
+</section>
+
+<div class="mini-foot">PROJECT AWAKE(각성) · 치지직 요구안 시뮬레이션 &amp; 대응 매핑 v0.1 &nbsp;·&nbsp; 2026.07.10 &nbsp;·&nbsp; STRICTLY INTERNAL — 외부 공유 절대 금지 &nbsp;·&nbsp; SUPERSTORY 스토리테크본부</div>
+
+</div>
+</body>
+</html>
